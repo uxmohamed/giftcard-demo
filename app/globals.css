@@ -241,8 +241,8 @@ input {
   .gift-card-flip-scene[data-active="true"] {
     /*   transition: transform 0s; */
     transform:
-      rotateX(calc((var(--ratio-y) - 0.5) * 50deg))
-      rotateY(calc((var(--ratio-x) - 0.5) * -40deg));
+      rotateX(calc((var(--ratio-y) - 0.5) * 30deg))
+      rotateY(calc((var(--ratio-x) - 0.5) * -20deg));
   }
 }
 
@@ -386,7 +386,7 @@ input {
   );
   background-repeat: no-repeat;
   mix-blend-mode: screen;
-  opacity: 0.16;
+  opacity: 0;
 }
 
 .gift-card-panel-content {
@@ -433,7 +433,7 @@ input {
 .gift-card-back-header {
   width: 100%;
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   justify-content: space-between;
 }
 
@@ -464,7 +464,7 @@ input {
 
 .activate-button {
   min-width: 170px;
-  padding: 7px 20px;
+  padding: 7px 16px;
   border: 0;
   border-radius: 512px;
   background: #00bc6d;
@@ -536,7 +536,6 @@ input {
 
 @media (prefers-reduced-motion: reduce) {
   .gift-card-flip-scene {
-    transform: none !important;
     transition: none;
   }
 

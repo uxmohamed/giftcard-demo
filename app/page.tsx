@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { motion, useReducedMotion } from 'framer-motion'
+import { motion } from 'framer-motion'
 
 const footerLinks = [
   'مركز المساعدة',
@@ -24,7 +24,6 @@ export default function HomePage() {
   const [resolvedCode, setResolvedCode] = useState('')
   const [isCardHovered, setIsCardHovered] = useState(false)
   const [isCardParallax, setIsCardParallax] = useState(false)
-  const prefersReducedMotion = useReducedMotion()
   const trimmedCode = voucherCode.trim()
   const isLoading = verificationState === 'loading'
   const isSuccess = verificationState === 'success'
@@ -59,12 +58,9 @@ export default function HomePage() {
             style={{ transformStyle: 'preserve-3d' }}
             data-active={isCardHovered ? 'true' : 'false'}
             data-parallax={isCardParallax ? 'true' : 'false'}
-            onPointerEnter={() => {
+            onPointerEnter={(event) => {
               setIsCardHovered(true)
               setIsCardParallax(false)
-            }}
-            onPointerMove={(event) => {
-              if (prefersReducedMotion) return
               const rect = event.currentTarget.getBoundingClientRect()
               const x = Math.min(Math.max((event.clientX - rect.left) / rect.width, 0), 1)
               const y = Math.min(Math.max((event.clientY - rect.top) / rect.height, 0), 1)
@@ -76,11 +72,21 @@ export default function HomePage() {
               event.currentTarget.style.setProperty('--ratio-x', ratioX.toFixed(4))
               event.currentTarget.style.setProperty('--ratio-y', ratioY.toFixed(4))
             }}
-            onPointerLeave={(event) => {
+            onPointerMove={(event) => {
+              const rect = event.currentTarget.getBoundingClientRect()
+              const x = Math.min(Math.max((event.clientX - rect.left) / rect.width, 0), 1)
+              const y = Math.min(Math.max((event.clientY - rect.top) / rect.height, 0), 1)
+              const centeredX = (x - 0.5) * 2
+              const centeredY = (y - 0.5) * 2
+              const ratioX = 0.5 + centeredX * 0.5
+              const ratioY = 0.5 + centeredY * 0.5
+
+              event.currentTarget.style.setProperty('--ratio-x', ratioX.toFixed(4))
+              event.currentTarget.style.setProperty('--ratio-y', ratioY.toFixed(4))
+            }}
+            onPointerLeave={() => {
               setIsCardHovered(false)
               setIsCardParallax(false)
-              event.currentTarget.style.setProperty('--ratio-x', '0.5')
-              event.currentTarget.style.setProperty('--ratio-y', '0.5')
             }}
             onTransitionEnd={(event) => {
               if (event.target !== event.currentTarget) return
