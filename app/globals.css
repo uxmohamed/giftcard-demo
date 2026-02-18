@@ -220,12 +220,15 @@ input {
 }
 
 .gift-card-stack {
+  position: relative;
   display: flex;
   flex-direction: column;
   align-items: center;
 }
 
 .gift-card-perspective {
+  position: relative;
+  z-index: 2;
   width: 450px;
   height: 300px;
   perspective: 1400px;
@@ -257,7 +260,19 @@ input {
 .activate-button-reveal-inner {
   min-height: 0;
   overflow: hidden;
+  display: flex;
+  justify-content: center;
+  padding-top: 0;
+  transition: padding-top var(--reveal-close-duration, 360ms)
+    var(--reveal-close-ease, cubic-bezier(0.55, 0, 1, 0.45))
+    var(--reveal-close-delay, 0ms);
+}
+
+.activate-button-reveal.is-open .activate-button-reveal-inner {
   padding-top: 48px;
+  transition: padding-top var(--reveal-open-duration, 480ms)
+    var(--reveal-open-ease, cubic-bezier(0.22, 1, 0.36, 1))
+    var(--reveal-open-delay, 800ms);
 }
 
 /* CLOSE: fades out quickly */

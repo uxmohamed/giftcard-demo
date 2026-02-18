@@ -2,6 +2,16 @@
 
 import { useEffect, useRef, useState } from 'react'
 import { motion } from 'framer-motion'
+// import { useDialKit } from 'dialkit' // Removed for production
+
+const ANIMATION_PARAMS = {
+  'Card Flip': { duration: 800 },
+  'Reveal Open': { delay: 850, duration: 480 },
+  'Reveal Close': { delay: 0, duration: 600 },
+  'Button Fade Open': { delay: 900, duration: 1000 },
+  'Button Fade Close': { delay: 0, duration: 245 },
+  loadingDelay: 1300,
+}
 
 const footerLinks = [
   'مركز المساعدة',
@@ -18,58 +28,6 @@ const socialLinks = [
   { name: 'YouTube', icon: '/assets/figma/icon-youtube.svg' },
 ]
 
-// ─── Animation params (all durations in ms) ───────────────────────────────────
-type CubicBezierObject = [number, number, number, number]
-
-const DEFAULT_PARAMS = {
-  // Card flip
-  flipDuration: 800,
-  flipEase: [0.645, 0.045, 0.355, 1.0] as CubicBezierObject,
-
-  // Reveal height — OPEN
-  revealOpenDelay: 800,
-  revealOpenDuration: 480,
-  revealOpenEase: [0.22, 1.0, 0.36, 1.0] as CubicBezierObject,
-
-  // Reveal height — CLOSE
-  revealCloseDelay: 0,
-  revealCloseDuration: 360,
-  revealCloseEase: [0.55, 0.0, 1.0, 0.45] as CubicBezierObject,
-
-  // Button fade — OPEN
-  buttonFadeOpenDelay: 1000,
-  buttonFadeOpenDuration: 320,
-
-  // Button fade — CLOSE
-  buttonFadeCloseDelay: 0,
-  buttonFadeCloseDuration: 150,
-
-  // Fake loading delay
-  loadingDelay: 1200,
-}
-
-function applyParams(params: typeof DEFAULT_PARAMS, el: HTMLElement) {
-  const cb = (e: CubicBezierObject) => `cubic-bezier(${e[0]},${e[1]},${e[2]},${e[3]})`
-
-  el.style.setProperty('--flip-duration', `${params.flipDuration}ms`)
-  el.style.setProperty('--flip-ease', cb(params.flipEase))
-
-  el.style.setProperty('--reveal-open-delay', `${params.revealOpenDelay}ms`)
-  el.style.setProperty('--reveal-open-duration', `${params.revealOpenDuration}ms`)
-  el.style.setProperty('--reveal-open-ease', cb(params.revealOpenEase))
-
-  el.style.setProperty('--reveal-close-delay', `${params.revealCloseDelay}ms`)
-  el.style.setProperty('--reveal-close-duration', `${params.revealCloseDuration}ms`)
-  el.style.setProperty('--reveal-close-ease', cb(params.revealCloseEase))
-
-  el.style.setProperty('--btn-fade-open-delay', `${params.buttonFadeOpenDelay}ms`)
-  el.style.setProperty('--btn-fade-open-duration', `${params.buttonFadeOpenDuration}ms`)
-
-  el.style.setProperty('--btn-fade-close-delay', `${params.buttonFadeCloseDelay}ms`)
-  el.style.setProperty('--btn-fade-close-duration', `${params.buttonFadeCloseDuration}ms`)
-}
-
-
 export default function HomePage() {
   const [voucherCode, setVoucherCode] = useState('')
   const [verificationState, setVerificationState] = useState<'idle' | 'loading' | 'error' | 'success'>('idle')
@@ -79,75 +37,27 @@ export default function HomePage() {
   const trimmedCode = voucherCode.trim()
   const successSoundRef = useRef<HTMLAudioElement | null>(null)
   const pageRef = useRef<HTMLDivElement>(null)
-  const paramsRef = useRef({ ...DEFAULT_PARAMS })
 
-  // ── Sound ──────────────────────────────────────────────────────────────────
   useEffect(() => {
     successSoundRef.current = new Audio('/assets/figma/sr-sequence.mp3')
   }, [])
 
-  // ── Apply default CSS vars on mount ───────────────────────────────────────
+  // ── Animation params (static) ─────────────────────────────────────────────
+  const p = ANIMATION_PARAMS
+
+  // ── Write CSS vars on mount ───────────────────────────────────────────────
   useEffect(() => {
-    if (pageRef.current) applyParams(paramsRef.current, pageRef.current)
-  }, [])
-
-  // ── Tweakpane ──────────────────────────────────────────────────────────────
-  useEffect(() => {
-    let pane: import('tweakpane').Pane | null = null
-
-    import('tweakpane').then(async ({ Pane, FolderApi }) => {
-      pane = new Pane({ title: '🎛 Animation Params', expanded: true })
-      const root = pane as unknown as InstanceType<typeof FolderApi>
-
-      const p = paramsRef.current
-
-      const update = () => {
-        if (pageRef.current) applyParams(p, pageRef.current)
-      }
-
-      // Register the cubic-bezier graph plugin
-      const { plugins } = await import('@tweakpane/plugin-essentials')
-      pane.registerPlugin({ plugins })
-
-      // ── Card flip ────────────────────────────────────────────────────────
-      const flipFolder = root.addFolder({ title: '🃏 Card Flip' })
-      flipFolder.addBinding(p, 'flipDuration', { label: 'Duration (ms)', min: 100, max: 2000, step: 10 }).on('change', update)
-      flipFolder.addBinding(p, 'flipEase', { label: 'Easing', view: 'cubicbezier', expanded: true }).on('change', update)
-
-      // ── Reveal height ────────────────────────────────────────────────────
-      const revealFolder = root.addFolder({ title: '📦 Reveal Height' })
-      const revealOpenFolder = revealFolder.addFolder({ title: '▶ Open' })
-      revealOpenFolder.addBinding(p, 'revealOpenDelay', { label: 'Delay (ms)', min: 0, max: 2000, step: 10 }).on('change', update)
-      revealOpenFolder.addBinding(p, 'revealOpenDuration', { label: 'Duration (ms)', min: 50, max: 2000, step: 10 }).on('change', update)
-      revealOpenFolder.addBinding(p, 'revealOpenEase', { label: 'Easing', view: 'cubicbezier', expanded: true }).on('change', update)
-      const revealCloseFolder = revealFolder.addFolder({ title: '◀ Close' })
-      revealCloseFolder.addBinding(p, 'revealCloseDelay', { label: 'Delay (ms)', min: 0, max: 2000, step: 10 }).on('change', update)
-      revealCloseFolder.addBinding(p, 'revealCloseDuration', { label: 'Duration (ms)', min: 50, max: 2000, step: 10 }).on('change', update)
-      revealCloseFolder.addBinding(p, 'revealCloseEase', { label: 'Easing', view: 'cubicbezier', expanded: true }).on('change', update)
-
-      // ── Button fade ──────────────────────────────────────────────────────
-      const btnFolder = root.addFolder({ title: '✨ Button Fade' })
-      const btnOpenFolder = btnFolder.addFolder({ title: '▶ Open' })
-      btnOpenFolder.addBinding(p, 'buttonFadeOpenDelay', { label: 'Delay (ms)', min: 0, max: 3000, step: 10 }).on('change', update)
-      btnOpenFolder.addBinding(p, 'buttonFadeOpenDuration', { label: 'Duration (ms)', min: 50, max: 2000, step: 10 }).on('change', update)
-      const btnCloseFolder = btnFolder.addFolder({ title: '◀ Close' })
-      btnCloseFolder.addBinding(p, 'buttonFadeCloseDelay', { label: 'Delay (ms)', min: 0, max: 3000, step: 10 }).on('change', update)
-      btnCloseFolder.addBinding(p, 'buttonFadeCloseDuration', { label: 'Duration (ms)', min: 50, max: 2000, step: 10 }).on('change', update)
-
-      // ── Loading delay ────────────────────────────────────────────────────
-      const miscFolder = root.addFolder({ title: '⏳ Misc' })
-      miscFolder.addBinding(p, 'loadingDelay', { label: 'Loading delay (ms)', min: 0, max: 5000, step: 50 })
-
-      // ── Log values button ────────────────────────────────────────────────
-      root.addButton({ title: '📋 Log values to console' }).on('click', () => {
-        console.log('Current animation params:', JSON.stringify(p, null, 2))
-      })
-
-    })
-
-    return () => {
-      pane?.dispose()
-    }
+    const el = pageRef.current
+    if (!el) return
+    el.style.setProperty('--flip-duration', `${p['Card Flip'].duration}ms`)
+    el.style.setProperty('--reveal-open-delay', `${p['Reveal Open'].delay}ms`)
+    el.style.setProperty('--reveal-open-duration', `${p['Reveal Open'].duration}ms`)
+    el.style.setProperty('--reveal-close-delay', `${p['Reveal Close'].delay}ms`)
+    el.style.setProperty('--reveal-close-duration', `${p['Reveal Close'].duration}ms`)
+    el.style.setProperty('--btn-fade-open-delay', `${p['Button Fade Open'].delay}ms`)
+    el.style.setProperty('--btn-fade-open-duration', `${p['Button Fade Open'].duration}ms`)
+    el.style.setProperty('--btn-fade-close-delay', `${p['Button Fade Close'].delay}ms`)
+    el.style.setProperty('--btn-fade-close-duration', `${p['Button Fade Close'].duration}ms`)
   }, [])
 
   const isLoading = verificationState === 'loading'
@@ -163,12 +73,8 @@ export default function HomePage() {
 
   const handleSubmit = (event: React.FormEvent) => {
     event.preventDefault()
-
     if (verificationState === 'loading') return
-    if (!trimmedCode) {
-      setVerificationState('idle')
-      return
-    }
+    if (!trimmedCode) { setVerificationState('idle'); return }
     if (verificationState === 'success' && trimmedCode === resolvedCode) return
 
     setVerificationState('loading')
@@ -180,14 +86,13 @@ export default function HomePage() {
         setResolvedCode(currentCode)
         return
       }
-
       setVerificationState('success')
       setResolvedCode(currentCode)
       if (successSoundRef.current) {
         successSoundRef.current.currentTime = 0
         successSoundRef.current.play().catch(() => {})
       }
-    }, paramsRef.current.loadingDelay)
+    }, p.loadingDelay)
   }
 
   return (
@@ -219,11 +124,8 @@ export default function HomePage() {
                 const rect = event.currentTarget.getBoundingClientRect()
                 const x = Math.min(Math.max((event.clientX - rect.left) / rect.width, 0), 1)
                 const y = Math.min(Math.max((event.clientY - rect.top) / rect.height, 0), 1)
-                const centeredX = (x - 0.5) * 2
-                const centeredY = (y - 0.5) * 2
-                const ratioX = 0.5 + centeredX * 0.5
-                const ratioY = 0.5 + centeredY * 0.5
-
+                const ratioX = 0.5 + (x - 0.5) * 2 * 0.5
+                const ratioY = 0.5 + (y - 0.5) * 2 * 0.5
                 event.currentTarget.style.setProperty('--ratio-x', ratioX.toFixed(4))
                 event.currentTarget.style.setProperty('--ratio-y', ratioY.toFixed(4))
               }}
@@ -231,11 +133,8 @@ export default function HomePage() {
                 const rect = event.currentTarget.getBoundingClientRect()
                 const x = Math.min(Math.max((event.clientX - rect.left) / rect.width, 0), 1)
                 const y = Math.min(Math.max((event.clientY - rect.top) / rect.height, 0), 1)
-                const centeredX = (x - 0.5) * 2
-                const centeredY = (y - 0.5) * 2
-                const ratioX = 0.5 + centeredX * 0.5
-                const ratioY = 0.5 + centeredY * 0.5
-
+                const ratioX = 0.5 + (x - 0.5) * 2 * 0.5
+                const ratioY = 0.5 + (y - 0.5) * 2 * 0.5
                 event.currentTarget.style.setProperty('--ratio-x', ratioX.toFixed(4))
                 event.currentTarget.style.setProperty('--ratio-y', ratioY.toFixed(4))
               }}
@@ -274,7 +173,6 @@ export default function HomePage() {
                       <img src="/assets/figma/logo-card.svg" alt="ثمانية" className="gift-card-back-logo" />
                       <p className="gift-card-back-title">قسيمة هدية</p>
                     </div>
-
                     <div className="gift-reward-panel" data-node-id="4237:47707">
                       <div className="reward-details">
                         <div className="reward-title-row">
@@ -306,11 +204,7 @@ export default function HomePage() {
           <p className="redemption-subtitle" data-node-id="4237:47635">
             أدخل رمز القسيمة أدناه
           </p>
-          <form
-            className="redemption-form"
-            data-node-id="4237:47636"
-            onSubmit={handleSubmit}
-          >
+          <form className="redemption-form" data-node-id="4237:47636" onSubmit={handleSubmit}>
             <div className="redemption-form-row" data-node-id="4237:47638">
               <button
                 className="pill-button verify-button"
@@ -350,20 +244,15 @@ export default function HomePage() {
             </div>
             <nav className="footer-links" aria-label="روابط" data-node-id="1817:73698">
               {footerLinks.map((link) => (
-                <a className="footer-link" key={link} href="#">
-                  {link}
-                </a>
+                <a className="footer-link" key={link} href="#">{link}</a>
               ))}
             </nav>
           </div>
-
           <div className="footer-credits" data-node-id="1817:73704">
             <img className="footer-divider" src="/assets/figma/footer-divider.svg" alt="" />
             <div className="footer-bottom-row" data-node-id="1817:73706">
               <div className="social-links-group" data-node-id="1817:73707">
-                <a href="#" className="lang-link">
-                  EN
-                </a>
+                <a href="#" className="lang-link">EN</a>
                 <div className="social-icons">
                   {socialLinks.map((social) => (
                     <a key={social.name} href="#" aria-label={social.name} className="social-icon-link">
