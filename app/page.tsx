@@ -52,7 +52,7 @@ export default function HomePage() {
           <img className="navigation-divider" src="/assets/figma/nav-divider.svg" alt="" />
         </header>
 
-        <div className="gift-card-perspective">
+        <div className={`gift-card-perspective${isError ? ' is-error' : ''}`}>
           <motion.div
             className="gift-card-flip-scene"
             style={{ transformStyle: 'preserve-3d' }}
