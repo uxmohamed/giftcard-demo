@@ -185,7 +185,7 @@ input {
   font-family: var(--font-sans);
   font-size: 14px;
   font-weight: 500;
-  line-height: 20px;
+  line-height: 32px;
   white-space: nowrap;
 }
 
@@ -219,6 +219,12 @@ input {
   display: block;
 }
 
+.gift-card-stack {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
 .gift-card-perspective {
   width: 450px;
   height: 300px;
@@ -227,6 +233,48 @@ input {
 
 .gift-card-perspective.is-error {
   animation: card-error-wiggle 320ms cubic-bezier(0.215, 0.61, 0.355, 1);
+}
+
+/* ── Activate button reveal (grid height trick) ── */
+
+/* CLOSE: collapses immediately with its own timing */
+.activate-button-reveal {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows var(--reveal-close-duration, 360ms)
+    var(--reveal-close-ease, cubic-bezier(0.55, 0, 1, 0.45))
+    var(--reveal-close-delay, 0ms);
+}
+
+/* OPEN: expands after the flip finishes */
+.activate-button-reveal.is-open {
+  grid-template-rows: 1fr;
+  transition: grid-template-rows var(--reveal-open-duration, 480ms)
+    var(--reveal-open-ease, cubic-bezier(0.22, 1, 0.36, 1))
+    var(--reveal-open-delay, 800ms);
+}
+
+.activate-button-reveal-inner {
+  min-height: 0;
+  overflow: hidden;
+  padding-top: 48px;
+}
+
+/* CLOSE: fades out quickly */
+.activate-button-below {
+  width: 250px;
+  padding: 14px 24px;
+  font-size: 15px;
+  opacity: 0;
+  transition: opacity var(--btn-fade-close-duration, 150ms) ease
+    var(--btn-fade-close-delay, 0ms);
+}
+
+/* OPEN: fades in after height is mostly open */
+.activate-button-reveal.is-open .activate-button-below {
+  opacity: 1;
+  transition: opacity var(--btn-fade-open-duration, 320ms) ease
+    var(--btn-fade-open-delay, 1000ms);
 }
 
 .gift-card-flip-scene {
@@ -246,10 +294,8 @@ input {
 @media (hover: hover) and (pointer: fine) {
   .gift-card-flip-scene[data-active="true"] {
     /*   transition: transform 0s; */
-    transform:
-      rotateX(calc((var(--ratio-y) - 0.5) * 30deg))
-      rotateY(calc((var(--ratio-x) - 0.5) * -20deg))
-      scale(1.05);
+    transform: rotateX(calc((var(--ratio-y) - 0.5) * 30deg))
+      rotateY(calc((var(--ratio-x) - 0.5) * -20deg)) scale(1.05);
   }
 }
 
@@ -267,7 +313,9 @@ input {
   position: absolute;
   pointer-events: none;
   opacity: 0;
-  transition: opacity 180ms ease-out, transform 180ms ease-out;
+  transition:
+    opacity 180ms ease-out,
+    transform 180ms ease-out;
 }
 
 .gift-card-flip-scene::before {
@@ -350,7 +398,8 @@ input {
   width: 100%;
   height: 100%;
   transform-style: preserve-3d;
-  transition: transform 760ms cubic-bezier(0.645, 0.045, 0.355, 1);
+  transition: transform var(--flip-duration, 800ms)
+    var(--flip-ease, cubic-bezier(0.645, 0.045, 0.355, 1));
 }
 
 .gift-card-flip-inner.is-flipped {
@@ -461,12 +510,9 @@ input {
 
 .gift-reward-panel {
   width: 100%;
-  padding: 16px;
-  border-radius: 12px;
-  background: rgba(255, 255, 255, 0.04);
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: center;
 }
 
 .activate-button {
@@ -478,21 +524,23 @@ input {
   font-family: var(--font-sans);
   font-size: 14px;
   font-weight: 500;
-  line-height: 20px;
+  line-height: 32px;
   cursor: pointer;
 }
 
 .reward-details {
   display: flex;
   flex-direction: column;
-  align-items: flex-end;
+  align-items: center;
   gap: 4px;
+  padding-bottom: 48px;
+  transform: scale(1.2);
 }
 
 .reward-title-row {
   display: flex;
   align-items: center;
-  justify-content: flex-end;
+  justify-content: center;
   gap: 4px;
 }
 
@@ -631,7 +679,7 @@ input {
 }
 
 .verify-button {
-  padding: 8px 12px;
+  padding: 8px 20px;
   min-height: 44px;
   flex-shrink: 0;
 }
