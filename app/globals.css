@@ -315,6 +315,13 @@ input {
   }
 }
 
+@media (hover: none) and (pointer: coarse) {
+  .gift-card-flip-scene[data-gyro="true"] {
+    transform: rotateX(calc((var(--ratio-y) - 0.5) * 30deg))
+      rotateY(calc((var(--ratio-x) - 0.5) * -20deg)) scale(1.05);
+  }
+}
+
 .gift-card-flip-scene[data-active="true"][data-parallax="true"] {
   transition: transform 0s;
 }
@@ -963,8 +970,12 @@ input {
     flex-direction: column-reverse;
   }
 
+  .gift-card-stack {
+    width: 100%;
+  }
+
   .gift-card-perspective {
-    width: min(450px, 100%);
+    width: 100%;
   }
 
   .redemption-panel {
@@ -1030,6 +1041,7 @@ input {
   }
 
   .gift-card-perspective {
+    width: 100%;
     height: auto;
   }
 

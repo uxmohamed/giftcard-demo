@@ -34,9 +34,11 @@ export default function HomePage() {
   const [resolvedCode, setResolvedCode] = useState('')
   const [isCardHovered, setIsCardHovered] = useState(false)
   const [isCardParallax, setIsCardParallax] = useState(false)
+  const [isGyroActive, setIsGyroActive] = useState(false)
   const trimmedCode = voucherCode.trim()
   const successSoundRef = useRef<HTMLAudioElement | null>(null)
   const pageRef = useRef<HTMLDivElement>(null)
+  const cardSceneRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     successSoundRef.current = new Audio('/assets/figma/sr-sequence.mp3')
@@ -60,9 +62,70 @@ export default function HomePage() {
     el.style.setProperty('--btn-fade-close-duration', `${p['Button Fade Close'].duration}ms`)
   }, [])
 
+  useEffect(() => {
+    const scene = cardSceneRef.current
+    if (!scene) return
+    if (typeof window === 'undefined') return
+    if (!window.matchMedia('(hover: none) and (pointer: coarse)').matches) return
+    if (!('DeviceOrientationEvent' in window)) return
+
+    const clamp = (value: number, min: number, max: number) => Math.min(Math.max(value, min), max)
+    const maxTilt = 24
+    let isListening = false
+
+    const handleOrientation = (event: DeviceOrientationEvent) => {
+      if (event.gamma == null || event.beta == null) return
+      const ratioX = 0.5 + clamp(event.gamma, -maxTilt, maxTilt) / (maxTilt * 2)
+      const ratioY = 0.5 + clamp(event.beta, -maxTilt, maxTilt) / (maxTilt * 2)
+      scene.style.setProperty('--ratio-x', ratioX.toFixed(4))
+      scene.style.setProperty('--ratio-y', ratioY.toFixed(4))
+      setIsGyroActive(true)
+      setIsCardParallax(true)
+    }
+
+    const startListening = () => {
+      if (isListening) return
+      window.addEventListener('deviceorientation', handleOrientation, true)
+      isListening = true
+    }
+
+    const requestPermission = async () => {
+      const orientationEvent = window.DeviceOrientationEvent as typeof DeviceOrientationEvent & {
+        requestPermission?: () => Promise<'granted' | 'denied'>
+      }
+      if (typeof orientationEvent.requestPermission !== 'function') {
+        startListening()
+        return
+      }
+      try {
+        const permission = await orientationEvent.requestPermission()
+        if (permission === 'granted') {
+          startListening()
+        }
+      } catch {
+        // no-op: permission denied or unavailable
+      }
+    }
+
+    void requestPermission()
+    window.addEventListener('touchstart', requestPermission, { passive: true })
+    window.addEventListener('pointerdown', requestPermission, { passive: true })
+
+    return () => {
+      if (isListening) {
+        window.removeEventListener('deviceorientation', handleOrientation, true)
+      }
+      window.removeEventListener('touchstart', requestPermission)
+      window.removeEventListener('pointerdown', requestPermission)
+      setIsGyroActive(false)
+    }
+  }, [])
+
   const isLoading = verificationState === 'loading'
   const isSuccess = verificationState === 'success'
   const isError = verificationState === 'error'
+  const isCardTiltActive = isCardHovered || isGyroActive
+  const isCardTiltParallax = isCardParallax || isGyroActive
   const hasTypedCode = trimmedCode.length > 0
 
   const frontCardText =
@@ -115,10 +178,12 @@ export default function HomePage() {
         <div className="gift-card-stack">
           <div className={`gift-card-perspective${isError ? ' is-error' : ''}`}>
             <motion.div
+              ref={cardSceneRef}
               className="gift-card-flip-scene"
               style={{ transformStyle: 'preserve-3d' }}
-              data-active={isCardHovered ? 'true' : 'false'}
-              data-parallax={isCardParallax ? 'true' : 'false'}
+              data-active={isCardTiltActive ? 'true' : 'false'}
+              data-parallax={isCardTiltParallax ? 'true' : 'false'}
+              data-gyro={isGyroActive ? 'true' : 'false'}
               onPointerEnter={(event) => {
                 setIsCardHovered(true)
                 setIsCardParallax(false)
