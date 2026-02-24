@@ -39,6 +39,7 @@ export default function HomePage() {
   const successSoundRef = useRef<HTMLAudioElement | null>(null)
   const pageRef = useRef<HTMLDivElement>(null)
   const cardSceneRef = useRef<HTMLDivElement>(null)
+  const activateGyroRef = useRef<(() => void) | null>(null)
 
   useEffect(() => {
     successSoundRef.current = new Audio('/assets/figma/sr-sequence.mp3')
@@ -86,6 +87,7 @@ export default function HomePage() {
     const startListening = () => {
       if (isListening) return
       window.addEventListener('deviceorientation', handleOrientation, true)
+      window.addEventListener('deviceorientationabsolute', handleOrientation as EventListener, true)
       isListening = true
     }
 
@@ -107,16 +109,20 @@ export default function HomePage() {
       }
     }
 
-    void requestPermission()
-    window.addEventListener('touchstart', requestPermission, { passive: true })
-    window.addEventListener('pointerdown', requestPermission, { passive: true })
+    activateGyroRef.current = () => {
+      void requestPermission()
+    }
+    window.addEventListener('touchstart', activateGyroRef.current, { passive: true })
 
     return () => {
       if (isListening) {
         window.removeEventListener('deviceorientation', handleOrientation, true)
+        window.removeEventListener('deviceorientationabsolute', handleOrientation as EventListener, true)
       }
-      window.removeEventListener('touchstart', requestPermission)
-      window.removeEventListener('pointerdown', requestPermission)
+      if (activateGyroRef.current) {
+        window.removeEventListener('touchstart', activateGyroRef.current)
+      }
+      activateGyroRef.current = null
       setIsGyroActive(false)
     }
   }, [])
@@ -184,6 +190,9 @@ export default function HomePage() {
               data-active={isCardTiltActive ? 'true' : 'false'}
               data-parallax={isCardTiltParallax ? 'true' : 'false'}
               data-gyro={isGyroActive ? 'true' : 'false'}
+              onPointerDown={() => {
+                activateGyroRef.current?.()
+              }}
               onPointerEnter={(event) => {
                 setIsCardHovered(true)
                 setIsCardParallax(false)
