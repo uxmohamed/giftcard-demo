@@ -63,13 +63,14 @@ export default function HomePage() {
   const isLoading = verificationState === 'loading'
   const isSuccess = verificationState === 'success'
   const isError = verificationState === 'error'
+  const hasTypedCode = trimmedCode.length > 0
 
-  const cardText =
+  const frontCardText =
     isLoading
       ? 'جاري التحقق'
       : isError
         ? 'انتهت صلاحية هذا الرمز'
-        : trimmedCode || 'قسيمـــة هديـــة'
+        : trimmedCode
 
   const handleSubmit = (event: React.FormEvent) => {
     event.preventDefault()
@@ -152,35 +153,45 @@ export default function HomePage() {
               <article className={`gift-card-flip-inner${isSuccess ? ' is-flipped' : ''}`} data-node-id="4237:48048">
                 <div className="gift-card-panel gift-card-panel-front">
                   <div className="gift-card-panel-content">
-                    <div className="gift-card-panel-header" data-node-id="4237:48049">
-                      <img src="/assets/figma/logo-card.svg" alt="ثمانية" className="gift-card-logo" data-node-id="4237:48050" />
+                    <div className={`gift-card-front-dynamic${hasTypedCode ? ' is-filled' : ''}`}>
+                      <div className="gift-card-symbol-wrap" data-node-id="4237:48050">
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          width="74"
+                          height="86"
+                          viewBox="0 0 74 86"
+                          fill="none"
+                          className="gift-card-symbol"
+                          role="img"
+                          aria-label="شعار ثمانية"
+                        >
+                          <path
+                            d="M19.0226 85.1055C29.6955 71.7435 34.0064 58.3626 35.8813 44.5395H37.6197C39.4946 58.3626 43.8056 71.7437 54.4784 85.1055H55.53L73.501 49.2707C52.5679 37.4284 44.1015 21.1339 38.1215 -0.000915527H35.3796C29.3996 21.1339 20.9331 37.4284 0 49.2707L17.971 85.1055H19.0226Z"
+                            fill="white"
+                          />
+                        </svg>
+                      </div>
+                      <p className={`gift-card-front-code${isError ? ' is-error' : ''}`} data-node-id="4237:48052">
+                        {frontCardText}
+                      </p>
                     </div>
-                    <p className={`gift-card-panel-title${isError ? ' is-error' : ''}`} data-node-id="4237:48052">
-                      {isLoading ? (
-                        <span className="loading-copy">
-                          <span className="loading-text">{cardText}</span>
-                          <span className="loading-dots">...</span>
-                        </span>
-                      ) : (
-                        cardText
-                      )}
-                    </p>
                   </div>
                 </div>
                 <div className="gift-card-panel gift-card-panel-back" data-node-id="4237:47703">
                   <div className="gift-card-panel-content">
-                    <div className="gift-card-back-header">
-                      <img src="/assets/figma/logo-card.svg" alt="ثمانية" className="gift-card-back-logo" />
-                      <p className="gift-card-back-title">قسيمة هدية</p>
-                    </div>
-                    <div className="gift-reward-panel" data-node-id="4237:47707">
-                      <div className="reward-details">
-                        <div className="reward-title-row">
-                          <img src="/assets/figma/icon-subscription.svg" alt="" className="reward-icon" />
-                          <p className="reward-title">اشتــراك ثمانية</p>
-                        </div>
-                        <p className="reward-duration">اشتراك لمدة 7 ايام</p>
+                    <div className="gift-card-back-offer" data-node-id="4556:59556">
+                      <div className="gift-card-back-tag" data-node-id="4556:59563">
+                        <img src="/assets/figma/icon-subscription.svg" alt="" className="gift-card-back-tag-icon" />
+                        <p className="gift-card-back-tag-text">اشتــراك ثمانية</p>
                       </div>
+                      <p className="gift-card-back-duration" data-node-id="4556:59564">
+                        لمـدة 7 ايـــام
+                      </p>
+                    </div>
+                    <div className="gift-card-back-meta" data-node-id="4556:59559">
+                      <p className="gift-card-back-label" data-node-id="4556:59560">من</p>
+                      <p className="gift-card-back-bank" data-node-id="4556:59571">بنك الراجحي</p>
+                      <p className="gift-card-back-expiry" data-node-id="4556:59570">ينتهي في 12 مايو 2026</p>
                     </div>
                   </div>
                 </div>

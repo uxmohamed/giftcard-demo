@@ -230,7 +230,8 @@ input {
   position: relative;
   z-index: 2;
   width: 450px;
-  height: 300px;
+  aspect-ratio: 3 / 2;
+  height: auto;
   perspective: 1400px;
 }
 
@@ -424,6 +425,7 @@ input {
 .gift-card-panel {
   position: absolute;
   inset: 0;
+  border: 1px solid rgba(255, 255, 255, 0.07);
   border-radius: 24px;
   box-sizing: border-box;
   background-image: linear-gradient(
@@ -479,55 +481,143 @@ input {
 }
 
 .gift-card-panel-front {
-  padding: 32px;
-  justify-content: space-between;
+  padding: 0;
 }
 
-.gift-card-panel-header {
+.gift-card-front-dynamic {
+  position: relative;
   width: 100%;
-  display: flex;
-  justify-content: flex-start;
+  height: 100%;
 }
 
-.gift-card-logo {
-  width: 86px;
-  height: 32.25px;
+.gift-card-symbol-wrap {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 96px;
+  height: 96px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transform: translate(-50%, -50%);
+  transform-origin: center center;
+  transition:
+    top 320ms cubic-bezier(0.215, 0.61, 0.355, 1),
+    left 320ms cubic-bezier(0.215, 0.61, 0.355, 1),
+    width 320ms cubic-bezier(0.215, 0.61, 0.355, 1),
+    height 320ms cubic-bezier(0.215, 0.61, 0.355, 1),
+    transform 320ms cubic-bezier(0.215, 0.61, 0.355, 1);
+  will-change: top, left, width, height, transform;
+}
+
+.gift-card-symbol {
+  width: 76.5625%;
+  height: auto;
   display: block;
+}
+
+.gift-card-front-dynamic.is-filled .gift-card-symbol-wrap {
+  top: 32px;
+  left: 32px;
+  width: 48px;
+  height: 48px;
+  transform: translate(0, 0);
+}
+
+.gift-card-front-code {
+  position: absolute;
+  top: 50%;
+  right: 32px;
+  margin: 0;
+  width: 386px;
+  text-align: right;
+  direction: ltr;
+  color: var(--text-primary);
+  font-family: var(--font-sans);
+  font-size: 18px;
+  font-weight: 500;
+  line-height: 28px;
+  letter-spacing: 0;
+  opacity: 0;
+  transform: translate3d(8px, -50%, 0);
+  transition:
+    opacity 170ms cubic-bezier(0.215, 0.61, 0.355, 1),
+    transform 170ms cubic-bezier(0.215, 0.61, 0.355, 1);
+  will-change: transform, opacity;
+}
+
+.gift-card-front-dynamic.is-filled .gift-card-front-code {
+  opacity: 1;
+  transform: translate3d(0, -50%, 0);
+}
+
+.gift-card-front-code.is-error {
+  color: #ff3b30;
+  font-size: 18px;
+  line-height: 28px;
+  direction: rtl;
 }
 
 .gift-card-panel-back {
   transform: rotateY(180deg);
-  padding: 28px;
-  justify-content: space-between;
+  padding: 32px;
+  direction: ltr;
 }
 
-.gift-card-back-header {
-  width: 100%;
+.gift-card-back-offer {
+  width: auto;
   display: flex;
-  align-items: center;
-  justify-content: space-between;
+  flex-direction: column;
+  align-items: flex-end;
+  justify-content: center;
+  gap: 8px;
+  margin-left: auto;
 }
 
-.gift-card-back-logo {
-  width: 94px;
-  height: 35.25px;
+.gift-card-back-tag {
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 2.46px;
+}
+
+.gift-card-back-tag-icon {
+  width: 13.53px;
+  height: 13.53px;
   display: block;
 }
 
-.gift-card-back-title {
+.gift-card-back-tag-text {
+  margin: 0;
+  color: var(--text-primary);
+  font-family: var(--font-display);
+  font-size: 12.3px;
+  font-weight: 900;
+  line-height: 14.762px;
+  text-align: right;
+}
+
+.gift-card-back-duration {
   margin: 0;
   color: var(--text-primary);
   font-family: var(--font-sans);
-  font-size: 18px;
-  font-weight: 400;
-  line-height: 1;
+  font-size: 28px;
+  font-weight: 700;
+  line-height: 56px;
+  text-align: right;
 }
 
-.gift-reward-panel {
-  width: 100%;
+.gift-card-back-meta {
+  width: auto;
   display: flex;
-  align-items: center;
+  flex-direction: column;
+  align-items: flex-start;
   justify-content: center;
+  gap: 16px;
+  margin-top: auto;
+  margin-right: auto;
+  direction: ltr;
+  text-align: left;
 }
 
 .activate-button {
@@ -543,64 +633,27 @@ input {
   cursor: pointer;
 }
 
-.reward-details {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 4px;
-  padding-bottom: 48px;
-  transform: scale(1.2);
-}
-
-.reward-title-row {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 4px;
-}
-
-.reward-icon {
-  width: 18px;
-  height: 18px;
-}
-
-.reward-title {
+.gift-card-back-bank {
   margin: 0;
+  width: 100%;
   color: var(--text-primary);
-  font-family: var(--font-display);
-  font-size: 20px;
-  font-weight: 900;
-  line-height: 24px;
+  font-family: var(--font-sans);
+  font-size: 18px;
+  font-weight: 500;
+  line-height: 28px;
+  text-align: left;
 }
 
-.reward-duration {
+.gift-card-back-label,
+.gift-card-back-expiry {
   margin: 0;
-  color: var(--text-primary);
+  width: 100%;
+  color: var(--text-placeholder);
   font-family: var(--font-sans);
   font-size: 12px;
   font-weight: 400;
   line-height: 16px;
-}
-
-.gift-card-panel-title {
-  margin: 0;
-  width: 100%;
-  text-align: right;
-  font-family: var(--font-sans);
-  font-size: 26px;
-  font-weight: 500;
-  line-height: 26px;
-  color: var(--text-primary);
-}
-
-.gift-card-panel-title.is-error {
-  color: #ff3b30;
-}
-
-.loading-copy {
-  display: inline-flex;
-  align-items: baseline;
-  flex-direction: row-reverse;
+  text-align: left;
 }
 
 @keyframes card-error-wiggle {
@@ -643,6 +696,11 @@ input {
 
   .gift-card-panel::before,
   .gift-card-panel::after {
+    transition: none;
+  }
+
+  .gift-card-symbol-wrap,
+  .gift-card-front-code {
     transition: none;
   }
 
@@ -972,28 +1030,28 @@ input {
   }
 
   .gift-card-perspective {
-    height: 260px;
+    height: auto;
   }
 
   .gift-card-panel-front {
-    padding: 24px;
+    padding: 0;
   }
 
   .gift-card-panel-back {
     padding: 20px;
   }
 
-  .gift-card-back-logo {
-    width: 86px;
-    height: 32px;
+  .gift-card-back-offer {
+    gap: 14px;
   }
 
-  .gift-card-back-title {
-    font-size: 16px;
+  .gift-card-back-duration {
+    font-size: 24px;
+    line-height: 40px;
   }
 
-  .gift-reward-panel {
-    padding: 12px;
+  .gift-card-back-meta {
+    gap: 10px;
   }
 
   .activate-button {
@@ -1001,13 +1059,24 @@ input {
     padding-inline: 14px;
   }
 
-  .reward-title {
-    font-size: 18px;
+  .gift-card-front-dynamic.is-filled .gift-card-symbol-wrap {
+    top: 16px;
+    left: 16px;
+    width: 40px;
+    height: 40px;
+    transform: translate(0, 0);
   }
 
-  .gift-card-panel-title {
-    font-size: 24px;
-    line-height: 1.2;
+  .gift-card-front-code {
+    right: 16px;
+    width: 220px;
+    font-size: 18px;
+    line-height: 28px;
+  }
+
+  .gift-card-front-code.is-error {
+    font-size: 18px;
+    line-height: 28px;
   }
 
   .redemption-heading {
