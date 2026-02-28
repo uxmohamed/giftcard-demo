@@ -52,6 +52,7 @@ export default function HomePage() {
   const [isIdleSweepActive, setIsIdleSweepActive] = useState(false)
   const trimmedCode = voucherCode.trim()
   const successSoundRef = useRef<HTMLAudioElement | null>(null)
+  const errorSoundRef = useRef<HTMLAudioElement | null>(null)
   const pageRef = useRef<HTMLDivElement>(null)
   const cardSceneRef = useRef<HTMLDivElement>(null)
   const activateGyroRef = useRef<(() => void) | null>(null)
@@ -98,6 +99,7 @@ export default function HomePage() {
 
   useEffect(() => {
     successSoundRef.current = new Audio('/assets/figma/sr-sequence.mp3')
+    errorSoundRef.current = new Audio('/assets/figma/error.wav')
   }, [])
 
   // ── Animation params (static) ─────────────────────────────────────────────
@@ -297,6 +299,10 @@ export default function HomePage() {
       if (currentCode === 'AA123') {
         setVerificationState('error')
         setResolvedCode(currentCode)
+        if (errorSoundRef.current) {
+          errorSoundRef.current.currentTime = 0
+          errorSoundRef.current.play().catch(() => {})
+        }
         return
       }
       setVerificationState('success')
@@ -428,7 +434,7 @@ export default function HomePage() {
 
         <div className="redemption-panel" data-node-id="4237:47632">
           <h1 className="redemption-heading" data-node-id="4237:48115">
-            استرداد هديتك
+            استرد قسيمتك
           </h1>
           <p className="redemption-subtitle" data-node-id="4237:47635">
             أدخل رمز القسيمة أدناه
