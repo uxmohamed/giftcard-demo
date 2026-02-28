@@ -296,6 +296,17 @@ input {
 .gift-card-flip-scene {
   --ratio-x: 0.5;
   --ratio-y: 0.5;
+  --idle-sweep-duration: 1300ms;
+  --idle-sweep-width: 60%;
+  --idle-sweep-left: -46.8%;
+  --idle-sweep-angle: 30deg;
+  --idle-sweep-peak-opacity: 0.24;
+  --idle-sweep-soft-opacity: 0.12;
+  --idle-sweep-fade-opacity: 0.058;
+  --idle-sweep-ease-x1: 0;
+  --idle-sweep-ease-y1: 0;
+  --idle-sweep-ease-x2: 1;
+  --idle-sweep-ease-y2: 1;
   width: 100%;
   height: 100%;
   position: relative;
@@ -448,12 +459,36 @@ input {
   isolation: isolate;
 }
 
+.gift-card-panel::before,
 .gift-card-panel::after {
   content: "";
   position: absolute;
-  inset: 0;
   pointer-events: none;
   z-index: 1;
+}
+
+.gift-card-panel::before {
+  top: -55%;
+  bottom: -55%;
+  left: var(--idle-sweep-left);
+  width: var(--idle-sweep-width);
+  opacity: 0;
+  background: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0) 0%,
+    rgba(255, 255, 255, 0.02) 24%,
+    rgba(255, 255, 255, 0.18) 50%,
+    rgba(255, 255, 255, 0.02) 76%,
+    rgba(255, 255, 255, 0) 100%
+  );
+  mix-blend-mode: screen;
+  transform: translate3d(-190%, 0, 0) rotate(var(--idle-sweep-angle));
+  transform-origin: center;
+  will-change: transform, opacity;
+}
+
+.gift-card-panel::after {
+  inset: 0;
   transition: opacity 200ms ease;
 }
 
@@ -485,6 +520,17 @@ input {
 
 .gift-card-flip-scene[data-active="true"] .gift-card-panel::after {
   opacity: 0.28;
+}
+
+.gift-card-flip-scene[data-idle-sweep="true"] .gift-card-panel::before {
+  animation: gift-card-idle-sheen var(--idle-sweep-duration)
+    cubic-bezier(
+      var(--idle-sweep-ease-x1),
+      var(--idle-sweep-ease-y1),
+      var(--idle-sweep-ease-x2),
+      var(--idle-sweep-ease-y2)
+    )
+    forwards;
 }
 
 .gift-card-panel-front {
@@ -684,6 +730,27 @@ input {
   }
 }
 
+@keyframes gift-card-idle-sheen {
+  0% {
+    opacity: 0;
+    transform: translate3d(-190%, 0, 0) rotate(var(--idle-sweep-angle));
+  }
+  12% {
+    opacity: var(--idle-sweep-soft-opacity);
+  }
+  50% {
+    opacity: var(--idle-sweep-peak-opacity);
+    transform: translate3d(115%, 0, 0) rotate(var(--idle-sweep-angle));
+  }
+  88% {
+    opacity: var(--idle-sweep-fade-opacity);
+  }
+  100% {
+    opacity: 0;
+    transform: translate3d(300%, 0, 0) rotate(var(--idle-sweep-angle));
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .gift-card-flip-scene {
     transition: none;
@@ -704,6 +771,11 @@ input {
   .gift-card-panel::before,
   .gift-card-panel::after {
     transition: none;
+  }
+
+  .gift-card-panel::before {
+    animation: none;
+    opacity: 0;
   }
 
   .gift-card-symbol-wrap,
@@ -762,10 +834,16 @@ input {
   padding: 8px 20px;
   min-height: 44px;
   flex-shrink: 0;
+  transition:
+    background-color 160ms ease,
+    color 160ms ease,
+    opacity 160ms ease;
 }
 
 .verify-button:disabled {
-  opacity: 0.72;
+  background: rgba(255, 255, 255, 0.08);
+  color: rgba(255, 255, 255, 0.42);
+  opacity: 1;
   cursor: default;
 }
 

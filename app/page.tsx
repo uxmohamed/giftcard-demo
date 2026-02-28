@@ -1,8 +1,7 @@
 'use client'
 
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState, type CSSProperties } from 'react'
 import { motion } from 'framer-motion'
-// import { useDialKit } from 'dialkit' // Removed for production
 
 const ANIMATION_PARAMS = {
   'Card Flip': { duration: 800 },
@@ -12,6 +11,20 @@ const ANIMATION_PARAMS = {
   'Button Fade Close': { delay: 0, duration: 245 },
   loadingDelay: 1300,
 }
+
+const IDLE_SWEEP_DEFAULTS = {
+  delay: 6000,
+  duration: 1300,
+  initialDelay: 1800,
+}
+
+const IDLE_SWEEP_BEAM = {
+  width: 60,
+  angle: 30,
+  peakOpacity: 0.24,
+}
+
+const IDLE_SWEEP_EASING = [0, 0, 1, 1] as const
 
 const footerLinks = [
   'مركز المساعدة',
@@ -35,11 +48,53 @@ export default function HomePage() {
   const [isCardHovered, setIsCardHovered] = useState(false)
   const [isCardParallax, setIsCardParallax] = useState(false)
   const [isGyroActive, setIsGyroActive] = useState(false)
+  const [isInputFocused, setIsInputFocused] = useState(false)
+  const [isIdleSweepActive, setIsIdleSweepActive] = useState(false)
   const trimmedCode = voucherCode.trim()
   const successSoundRef = useRef<HTMLAudioElement | null>(null)
   const pageRef = useRef<HTMLDivElement>(null)
   const cardSceneRef = useRef<HTMLDivElement>(null)
   const activateGyroRef = useRef<(() => void) | null>(null)
+  const idleSweepStartTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const idleSweepEndTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const isIdleSweepSuppressedRef = useRef(false)
+  const prefersReducedMotionRef = useRef(false)
+  const scheduleIdleSweepRef = useRef<(delay: number) => void>(() => {})
+  const idleSweepConfigRef = useRef(IDLE_SWEEP_DEFAULTS)
+  const idleSweepDelay = IDLE_SWEEP_DEFAULTS.delay
+  const idleSweepDuration = IDLE_SWEEP_DEFAULTS.duration
+  const idleSweepBeamWidth = IDLE_SWEEP_BEAM.width
+  const idleSweepBeamAngle = IDLE_SWEEP_BEAM.angle
+  const idleSweepPeakOpacity = IDLE_SWEEP_BEAM.peakOpacity
+  const idleSweepSoftOpacity = idleSweepPeakOpacity * 0.5
+  const idleSweepFadeOpacity = idleSweepPeakOpacity * 0.24
+  const idleSweepEdgeOffset = Math.max(idleSweepBeamWidth * 0.78, 18)
+  const [
+    idleSweepEaseX1,
+    idleSweepEaseY1,
+    idleSweepEaseX2,
+    idleSweepEaseY2,
+  ] = IDLE_SWEEP_EASING
+  const cardSceneStyle = {
+    transformStyle: 'preserve-3d',
+    '--idle-sweep-duration': `${idleSweepDuration}ms`,
+    '--idle-sweep-width': `${idleSweepBeamWidth}%`,
+    '--idle-sweep-left': `-${idleSweepEdgeOffset}%`,
+    '--idle-sweep-angle': `${idleSweepBeamAngle}deg`,
+    '--idle-sweep-peak-opacity': idleSweepPeakOpacity.toFixed(3),
+    '--idle-sweep-soft-opacity': idleSweepSoftOpacity.toFixed(3),
+    '--idle-sweep-fade-opacity': idleSweepFadeOpacity.toFixed(3),
+    '--idle-sweep-ease-x1': idleSweepEaseX1.toFixed(3),
+    '--idle-sweep-ease-y1': idleSweepEaseY1.toFixed(3),
+    '--idle-sweep-ease-x2': idleSweepEaseX2.toFixed(3),
+    '--idle-sweep-ease-y2': idleSweepEaseY2.toFixed(3),
+  } as CSSProperties
+
+  idleSweepConfigRef.current = {
+    delay: idleSweepDelay,
+    duration: idleSweepDuration,
+    initialDelay: IDLE_SWEEP_DEFAULTS.initialDelay,
+  }
 
   useEffect(() => {
     successSoundRef.current = new Audio('/assets/figma/sr-sequence.mp3')
@@ -127,12 +182,78 @@ export default function HomePage() {
     }
   }, [])
 
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+
+    const reduceMotionQuery = window.matchMedia('(prefers-reduced-motion: reduce)')
+    const clearIdleSweepStartTimeout = () => {
+      if (idleSweepStartTimeoutRef.current) {
+        clearTimeout(idleSweepStartTimeoutRef.current)
+        idleSweepStartTimeoutRef.current = null
+      }
+    }
+    const clearIdleSweepEndTimeout = () => {
+      if (idleSweepEndTimeoutRef.current) {
+        clearTimeout(idleSweepEndTimeoutRef.current)
+        idleSweepEndTimeoutRef.current = null
+      }
+    }
+    const stopIdleSweep = () => {
+      clearIdleSweepStartTimeout()
+      clearIdleSweepEndTimeout()
+      setIsIdleSweepActive(false)
+    }
+    const scheduleIdleSweep = (delay: number) => {
+      clearIdleSweepStartTimeout()
+      if (prefersReducedMotionRef.current || isIdleSweepSuppressedRef.current) return
+
+      idleSweepStartTimeoutRef.current = setTimeout(() => {
+        idleSweepStartTimeoutRef.current = null
+        if (prefersReducedMotionRef.current || isIdleSweepSuppressedRef.current) return
+
+        setIsIdleSweepActive(true)
+        clearIdleSweepEndTimeout()
+        idleSweepEndTimeoutRef.current = setTimeout(() => {
+          idleSweepEndTimeoutRef.current = null
+          setIsIdleSweepActive(false)
+          if (!prefersReducedMotionRef.current && !isIdleSweepSuppressedRef.current) {
+            scheduleIdleSweep(idleSweepConfigRef.current.delay)
+          }
+        }, idleSweepConfigRef.current.duration)
+      }, delay)
+    }
+    const handleReducedMotionChange = (event: MediaQueryListEvent) => {
+      prefersReducedMotionRef.current = event.matches
+      if (event.matches) {
+        stopIdleSweep()
+        return
+      }
+      scheduleIdleSweep(idleSweepConfigRef.current.delay)
+    }
+
+    prefersReducedMotionRef.current = reduceMotionQuery.matches
+    scheduleIdleSweepRef.current = scheduleIdleSweep
+    if (!prefersReducedMotionRef.current) {
+      scheduleIdleSweep(idleSweepConfigRef.current.initialDelay)
+    }
+    reduceMotionQuery.addEventListener('change', handleReducedMotionChange)
+
+    return () => {
+      reduceMotionQuery.removeEventListener('change', handleReducedMotionChange)
+      scheduleIdleSweepRef.current = () => {}
+      clearIdleSweepStartTimeout()
+      clearIdleSweepEndTimeout()
+    }
+  }, [])
+
   const isLoading = verificationState === 'loading'
   const isSuccess = verificationState === 'success'
   const isError = verificationState === 'error'
+  const isVerifyLocked = isSuccess && trimmedCode === resolvedCode
   const isCardTiltActive = isCardHovered || isGyroActive
   const isCardTiltParallax = isCardParallax || isGyroActive
   const hasTypedCode = trimmedCode.length > 0
+  const isIdleSweepSuppressed = isCardTiltActive || isInputFocused || hasTypedCode || verificationState !== 'idle'
 
   const frontCardText =
     isLoading
@@ -140,6 +261,28 @@ export default function HomePage() {
       : isError
         ? 'انتهت صلاحية هذا الرمز'
         : trimmedCode
+
+  useEffect(() => {
+    isIdleSweepSuppressedRef.current = isIdleSweepSuppressed
+    if (prefersReducedMotionRef.current) return
+
+    if (isIdleSweepSuppressed) {
+      if (!isIdleSweepActive && idleSweepStartTimeoutRef.current) {
+        clearTimeout(idleSweepStartTimeoutRef.current)
+        idleSweepStartTimeoutRef.current = null
+      }
+      return
+    }
+
+    if (isIdleSweepActive) return
+
+    if (idleSweepStartTimeoutRef.current) {
+      clearTimeout(idleSweepStartTimeoutRef.current)
+      idleSweepStartTimeoutRef.current = null
+    }
+
+    scheduleIdleSweepRef.current(idleSweepDelay)
+  }, [idleSweepDelay, isIdleSweepActive, isIdleSweepSuppressed])
 
   const handleSubmit = (event: React.FormEvent) => {
     event.preventDefault()
@@ -186,10 +329,11 @@ export default function HomePage() {
             <motion.div
               ref={cardSceneRef}
               className="gift-card-flip-scene"
-              style={{ transformStyle: 'preserve-3d' }}
+              style={cardSceneStyle}
               data-active={isCardTiltActive ? 'true' : 'false'}
               data-parallax={isCardTiltParallax ? 'true' : 'false'}
               data-gyro={isGyroActive ? 'true' : 'false'}
+              data-idle-sweep={isIdleSweepActive ? 'true' : 'false'}
               onPointerDown={() => {
                 activateGyroRef.current?.()
               }}
@@ -295,7 +439,7 @@ export default function HomePage() {
                 className="pill-button verify-button"
                 type="submit"
                 data-node-id="4237:47639"
-                disabled={verificationState === 'loading'}
+                disabled={isLoading || isVerifyLocked}
               >
                 تحقق من الرمز
               </button>
@@ -306,6 +450,12 @@ export default function HomePage() {
                   type="text"
                   placeholder="رمز القسيمة"
                   value={voucherCode}
+                  onFocus={() => {
+                    setIsInputFocused(true)
+                  }}
+                  onBlur={() => {
+                    setIsInputFocused(false)
+                  }}
                   onChange={(event) => {
                     const nextCode = event.target.value.toUpperCase()
                     setVoucherCode(nextCode)
