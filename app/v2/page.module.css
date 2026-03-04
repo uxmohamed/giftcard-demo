@@ -488,7 +488,7 @@
   border: 0;
   cursor: pointer;
   color: #fff;
-  background: linear-gradient(90deg, #00bc6d 0%, #1687b8 100%);
+  background: #00bc6d;
   box-shadow: 0 10px 30px rgba(0, 188, 109, 0.22);
 }
 
