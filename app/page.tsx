@@ -255,13 +255,16 @@ export default function HomePage() {
   const isCardTiltActive = isCardHovered || isGyroActive
   const isCardTiltParallax = isCardParallax || isGyroActive
   const hasTypedCode = trimmedCode.length > 0
+  const shouldShowFrontFilledState = hasTypedCode
   const isIdleSweepSuppressed = isCardTiltActive || isInputFocused || hasTypedCode || verificationState !== 'idle'
 
   const frontCardText =
-    isLoading
-      ? 'جاري التحقق'
+    isSuccess
+      ? ''
+      : isLoading
+      ? 'التحقق جارٍ…'
       : isError
-        ? 'انتهت صلاحية هذا الرمز'
+        ? 'حدث خطأ'
         : trimmedCode
 
   useEffect(() => {
@@ -377,8 +380,8 @@ export default function HomePage() {
               <article className={`gift-card-flip-inner${isSuccess ? ' is-flipped' : ''}`} data-node-id="4237:48048">
                 <div className="gift-card-panel gift-card-panel-front">
                   <div className="gift-card-panel-content">
-                    <div className={`gift-card-front-dynamic${hasTypedCode ? ' is-filled' : ''}`}>
-                      <div className="gift-card-symbol-wrap" data-node-id="4237:48050">
+                    <div className={`gift-card-front-dynamic${shouldShowFrontFilledState ? ' is-filled' : ''}`}>
+                      <div className={`gift-card-symbol-wrap${isSuccess ? ' is-success' : ''}`} data-node-id="4237:48050">
                         <svg
                           xmlns="http://www.w3.org/2000/svg"
                           width="74"
@@ -395,7 +398,10 @@ export default function HomePage() {
                           />
                         </svg>
                       </div>
-                      <p className={`gift-card-front-code${isError ? ' is-error' : ''}`} data-node-id="4237:48052">
+                      <p
+                        className={`gift-card-front-code${isError ? ' is-error' : ''}${isLoading ? ' is-loading' : ''}`}
+                        data-node-id="4237:48052"
+                      >
                         {frontCardText}
                       </p>
                     </div>
@@ -409,14 +415,16 @@ export default function HomePage() {
                         <p className="gift-card-back-tag-text">اشتــراك ثمانية</p>
                       </div>
                       <p className="gift-card-back-duration" data-node-id="4556:59564">
-                        لمـدة 7 ايـــام
+                        <span className="gift-card-back-duration-lead">اسبوع </span>
+                        <span className="gift-card-back-duration-trail">مجانـــًا</span>
                       </p>
                     </div>
                     <div className="gift-card-back-meta" data-node-id="4556:59559">
-                      <p className="gift-card-back-label" data-node-id="4556:59560">من</p>
+                      <p className="gift-card-back-label" data-node-id="4556:59560">بقسيمـــة من</p>
                       <p className="gift-card-back-bank" data-node-id="4556:59571">بنك الراجحي</p>
-                      <p className="gift-card-back-expiry" data-node-id="4556:59570">ينتهي في 12 مايو 2026</p>
+                      <p className="gift-card-back-expiry" data-node-id="4556:59570">صالحة حتى 12 مايو 2026</p>
                     </div>
+                    <img className="gift-card-back-shape" src="/assets/figma-v2/card-shape.png" alt="" />
                   </div>
                 </div>
               </article>
@@ -434,21 +442,13 @@ export default function HomePage() {
 
         <div className="redemption-panel" data-node-id="4237:47632">
           <h1 className="redemption-heading" data-node-id="4237:48115">
-            استرد قسيمتك
+            فعّـــل قسيمة
           </h1>
           <p className="redemption-subtitle" data-node-id="4237:47635">
-            أدخل رمز القسيمة أدناه
+            اكتب رمز القسيمة:
           </p>
           <form className="redemption-form" data-node-id="4237:47636" onSubmit={handleSubmit}>
             <div className="redemption-form-row" data-node-id="4237:47638">
-              <button
-                className="pill-button verify-button"
-                type="submit"
-                data-node-id="4237:47639"
-                disabled={isLoading || isVerifyLocked}
-              >
-                تحقق من الرمز
-              </button>
               <label className="voucher-field-wrap" data-node-id="4237:47640">
                 <span className="sr-only">رمز القسيمة</span>
                 <input
@@ -472,6 +472,14 @@ export default function HomePage() {
                   disabled={verificationState === 'loading'}
                 />
               </label>
+              <button
+                className="pill-button verify-button"
+                type="submit"
+                data-node-id="4237:47639"
+                disabled={isLoading || isVerifyLocked}
+              >
+                تحقق من الرمز
+              </button>
             </div>
           </form>
         </div>

@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { MeshGradient } from '@paper-design/shaders-react'
+import { Warp } from '@paper-design/shaders-react'
 import styles from './page.module.css'
 
 type VerificationState = 'idle' | 'loading' | 'error' | 'success'
@@ -52,7 +52,8 @@ export default function GiftCardV2Page() {
   const isVerifyLocked = isSuccess && normalizedCode.length > 0 && normalizedCode === resolvedCode
   const canVerify = normalizedCode.length > 0 && !isLoading && !isVerifyLocked
   const hasTypedCode = normalizedCode.length > 0
-  const frontCardText = isLoading ? 'جاري التحقق' : isError ? 'انتهت صلاحية هذا الرمز' : normalizedCode
+  const shouldShowFrontFilledState = hasTypedCode
+  const frontCardText = isSuccess ? '' : isLoading ? 'التحقق جارٍ…' : isError ? 'حدث خطأ' : normalizedCode
 
   const activeOtpIndex = isOtpFocused ? Math.min(normalizedCode.length, OTP_LENGTH - 1) : -1
 
@@ -133,12 +134,17 @@ export default function GiftCardV2Page() {
           <div className={styles.visualColumn}>
             <div className={styles.visualPanel}>
               <div className={styles.shaderBackground} aria-hidden="true">
-                <MeshGradient
-                  speed={1}
-                  scale={1}
-                  distortion={0.8}
-                  swirl={0.1}
-                  colors={['#000000', '#00BC6D', '#000000', '#00BC6D']}
+                <Warp
+                  speed={0.7}
+                  scale={2.5}
+                  softness={1}
+                  proportion={0.5}
+                  swirl={0.9}
+                  swirlIterations={6}
+                  shape="checks"
+                  distortion={0.09}
+                  shapeScale={0.25}
+                  colors={['#000000', '#000000', '#00BC6D80']}
                   style={{ height: '100%', width: '100%' }}
                 />
               </div>
@@ -185,8 +191,12 @@ export default function GiftCardV2Page() {
                     <article className={`${styles.giftCardInner}${isSuccess ? ` ${styles.giftCardInnerFlipped}` : ''}`}>
                       <div className={`${styles.giftCardPanel} ${styles.giftCardPanelFront}`}>
                         <div className={styles.giftCardPanelContent}>
-                          <div className={`${styles.frontDynamic}${hasTypedCode ? ` ${styles.frontDynamicFilled}` : ''}`}>
-                            <div className={styles.frontSymbolWrap}>
+                          <div
+                            className={`${styles.frontDynamic}${shouldShowFrontFilledState ? ` ${styles.frontDynamicFilled}` : ''}`}
+                          >
+                            <div
+                              className={`${styles.frontSymbolWrap}${isSuccess ? ` ${styles.frontSymbolWrapSuccess}` : ''}`}
+                            >
                               <svg
                                 xmlns="http://www.w3.org/2000/svg"
                                 width="74"
@@ -203,7 +213,13 @@ export default function GiftCardV2Page() {
                                 />
                               </svg>
                             </div>
-                            <p className={`${styles.frontCode}${isError ? ` ${styles.frontCodeError}` : ''}`}>{frontCardText}</p>
+                            <p
+                              className={`${styles.frontCode}${isError ? ` ${styles.frontCodeError}` : ''}${
+                                isLoading ? ` ${styles.frontCodeLoading}` : ''
+                              }`}
+                            >
+                              {frontCardText}
+                            </p>
                           </div>
                         </div>
                       </div>
@@ -215,13 +231,16 @@ export default function GiftCardV2Page() {
                               <img className={styles.cardBrandIcon} src="/assets/figma-v2/subscription-brand.svg" alt="" />
                               <p className={styles.cardBrandText}>اشتراك ثمانية</p>
                             </div>
-                            <img className={styles.cardPlanPrice} src="/assets/figma-v2/card-plan-price.svg" alt="شهر مجاناً" />
+                            <p className={styles.cardDuration}>
+                              <span className={styles.cardDurationLead}>اسبوع </span>
+                              <span className={styles.cardDurationTrail}>مجانـــًا</span>
+                            </p>
                           </div>
 
                           <div className={styles.cardMeta}>
-                            <p className={styles.cardMetaLabel}>من</p>
+                            <p className={styles.cardMetaLabel}>بقسيمـــة من</p>
                             <p className={styles.cardMetaBank}>بنك الراجحي</p>
-                            <p className={styles.cardMetaExpiry}>ينتهي في 12 مايو 2026</p>
+                            <p className={styles.cardMetaExpiry}>صالحة حتى 12 مايو 2026</p>
                           </div>
 
                           <img className={styles.cardShape} src="/assets/figma-v2/card-shape.png" alt="" />
@@ -232,22 +251,27 @@ export default function GiftCardV2Page() {
                 </div>
               </div>
 
-              <div className={styles.statusArea}>
-                {isLoading && <p className={styles.loadingPill}>جاري تفعيل اشتـــراكك…</p>}
-                {isSuccess && !isLoading && (
-                  <button className={styles.activationButton} type="button">
-                    تفعيل الاشتراك
-                  </button>
-                )}
+              <div
+                className={`${styles.statusArea}${
+                  isSuccess ? ` ${styles.statusAreaOpen}` : ''
+                }`}
+              >
+                <div className={styles.statusAreaInner}>
+                  {isSuccess && (
+                    <button className={styles.activationButton} type="button">
+                      تفعيل الاشتراك
+                    </button>
+                  )}
+                </div>
               </div>
             </div>
           </div>
 
           <div className={styles.redemptionPanel}>
-            <h1 className={styles.redemptionHeading}>استرد قسيمتك.</h1>
+            <h1 className={styles.redemptionHeading}>فعّـــل قسيمة</h1>
 
             <div className={styles.redemptionTextGroup}>
-              <p className={styles.redemptionSubtitle}>ادخل الرمز لتفعيل القسيمة.</p>
+              <p className={styles.redemptionSubtitle}>اكتب رمز القسيمة:</p>
               <p className={styles.redemptionDescription}>
                 هنا مساحة لكتابة تفاصيل توضيحية أكثر. ممكن نجاوب عليها هنا بشكل مختصر بدل من قسم الأسئلة.
               </p>
@@ -317,7 +341,7 @@ export default function GiftCardV2Page() {
                 </button>
               </div>
 
-              {isError && <p className={styles.errorText}>انتهت صلاحية هذا الرمز</p>}
+              {isError && <p className={styles.errorText}>حدث خطأ</p>}
             </form>
           </div>
         </div>
