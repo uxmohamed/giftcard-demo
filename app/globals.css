@@ -1081,7 +1081,7 @@ input {
   }
 
   .gift-card-stack {
-    width: 100%;
+    width: min(400px, 100%);
   }
 
   .gift-card-perspective {
